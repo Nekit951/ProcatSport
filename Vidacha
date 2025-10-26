@@ -1,0 +1,289 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+
+namespace ProcatSport
+{
+    public partial class Vidacha : Form
+    {
+        private bool isProkat;
+        public Vidacha(bool isProkat)
+        {
+            InitializeComponent();
+            this.isProkat = isProkat;
+
+            DataTable vidachaTable = new DataTable();
+
+            string connectionString = "Data Source=WIN-K60S1T67SO6\\SQLEXPRESS;Initial Catalog=ProcatSport;Integrated Security=True";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand("SELECT * FROM dbo.Vidacha", connection);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(vidachaTable);
+            }
+
+            dataGridView1.DataSource = vidachaTable;
+            dataGridView1.ReadOnly = true;
+            this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellClick);
+
+            if (!isProkat)
+            {
+                button1.Visible = false;
+                button2.Visible = false;
+                button3.Visible = false;
+                button4.Visible = false;
+            }
+
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string connectionString = "Data Source=WIN-K60S1T67SO6\\SQLEXPRESS;Initial Catalog=ProcatSport;Integrated Security=True";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = "INSERT INTO dbo.Vidacha (Id, Equipment, Customers, Price, Data_vidachi, Data_vozvrata) VALUES (@Id, @Equipment, @Customers, @Price, @Data_vidachi, @Data_vozvrata)";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", textBox1.Text);
+                    command.Parameters.AddWithValue("@Equipment", textBox2.Text);
+                    command.Parameters.AddWithValue("@Customers", textBox3.Text);
+                    command.Parameters.AddWithValue("@Price", textBox4.Text);
+                    command.Parameters.AddWithValue("@Data_vidachi", textBox5.Text);
+                    command.Parameters.AddWithValue("@Data_vozvrata", textBox6.Text);
+
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        MessageBox.Show("Данные успешно добавлены");
+
+
+                        SqlDataAdapter dataAdapter = new SqlDataAdapter("SELECT * FROM dbo.Vidacha", connection);
+                        DataTable vidachaTable = new DataTable();
+                        dataAdapter.Fill(vidachaTable);
+                        dataGridView1.DataSource = vidachaTable;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ошибка добавления данных");
+                    }
+                }
+            }
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                string connectionString = "Data Source=WIN-K60S1T67SO6\\SQLEXPRESS;Initial Catalog=ProcatSport;Integrated Security=True";
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    int rowIndex = dataGridView1.SelectedRows[0].Index;
+                    string Id = dataGridView1.Rows[rowIndex].Cells["Id"].Value.ToString();
+                    string query = "UPDATE dbo.Vidacha SET Id = @Id, Equipment = @Equipment, Customers = @Customers, Price = @Price, Data_vidachi = @Data_vidachi, Data_vozvrata = @Data_vozvrata WHERE Id = @Id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", Id);
+                        command.Parameters.AddWithValue("@Equipment", textBox2.Text);
+                        command.Parameters.AddWithValue("@Customers", textBox3.Text);
+                        command.Parameters.AddWithValue("@Price", textBox4.Text);
+                        
+
+                        DateTime DataVidachi;
+                        DateTime DataVozvrata;
+
+                        if (DateTime.TryParse(textBox5.Text, out DataVidachi))
+                        {
+                            command.Parameters.AddWithValue("@Data_vidachi", DataVidachi);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Неверный формат даты выдачи.");
+                            return;
+                        }
+
+                        if (DateTime.TryParse(textBox6.Text, out DataVozvrata))
+                        {
+                            command.Parameters.AddWithValue("@Data_vozvrata", DataVozvrata);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Неверный формат даты возврата.");
+                            return;
+                        }
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            MessageBox.Show("Данные успешно обновлены");
+
+                            SqlDataAdapter dataAdapter = new SqlDataAdapter("SELECT * FROM dbo.Vidacha", connection);
+                            DataTable vidachaTable = new DataTable();
+                            dataAdapter.Fill(vidachaTable);
+                            dataGridView1.DataSource = vidachaTable;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Ошибка обновления данных");
+                        }
+                    }
+                }
+            }
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                string connectionString = "Data Source=WIN-K60S1T67SO6\\SQLEXPRESS;Initial Catalog=ProcatSport;Integrated Security=True";
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    int rowIndex = dataGridView1.SelectedRows[0].Index;
+                    string Id = dataGridView1.Rows[rowIndex].Cells["Id"].Value.ToString();
+
+                    string query = "DELETE FROM dbo.Vidacha WHERE Id = @Id";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", Id);
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            MessageBox.Show("Данные успешно удалены");
+
+
+                            SqlDataAdapter dataAdapter = new SqlDataAdapter("SELECT * FROM dbo.Vidacha", connection);
+                            DataTable vidachaTable = new DataTable();
+                            dataAdapter.Fill(vidachaTable);
+                            dataGridView1.DataSource = vidachaTable;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Ошибка удаления данных");
+                        }
+                    }
+                }
+            }
+        }
+        private void button4_Click_1(object sender, EventArgs e)
+        {
+            DataTable changesTable = (DataTable)dataGridView1.DataSource;
+
+            string connectionString = "Data Source=WIN-K60S1T67SO6\\SQLEXPRESS;Initial Catalog=ProcatSport;Integrated Security=True";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand("SELECT * FROM dbo.Vidacha", connection);
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+
+                adapter.UpdateCommand = builder.GetUpdateCommand();
+                adapter.InsertCommand = builder.GetInsertCommand();
+                adapter.DeleteCommand = builder.GetDeleteCommand();
+
+                adapter.Update(changesTable);
+            }
+
+            MessageBox.Show("Данные успешно сохранены");
+        }
+
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Id")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Equipment")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Customers")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Price")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Data_vidachi")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == "Data_vozvrata")
+            {
+                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                if (selectedRow != null)
+                {
+                    textBox1.Text = selectedRow.Cells["Id"].Value.ToString();
+                    textBox2.Text = selectedRow.Cells["Equipment"].Value.ToString();
+                    textBox3.Text = selectedRow.Cells["Customers"].Value.ToString();
+                    textBox4.Text = selectedRow.Cells["Price"].Value.ToString();
+                    textBox5.Text = selectedRow.Cells["Data_vidachi"].Value.ToString();
+                    textBox6.Text = selectedRow.Cells["Data_vozvrata"].Value.ToString();
+                }
+            }
+        }
+    }
+}
